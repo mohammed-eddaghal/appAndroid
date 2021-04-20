@@ -1,0 +1,98 @@
+{
+  "project_info": {
+    "project_number": "616472109439",
+    "firebase_url": "https://mine-is-yoursapp-default-rtdb.firebaseio.com",
+    "project_id": "mine-is-yoursapp",
+    "storage_bucket": "mine-is-yoursapp.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:616472109439:android:b1926b57563c7d271bfa4a",
+        "android_client_info": {
+          "package_name": "com.ensias.mine_is_yoursapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "616472109439-gcf9jjsi6mdj1ltelh4ont1i9jdua0hj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCn1LY04HFpPsFkBW6L2hazE36PJGm3qd8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "616472109439-gcf9jjsi6mdj1ltelh4ont1i9jdua0hj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:616472109439:android:fbdbd68644577c7d1bfa4a",
+        "android_client_info": {
+          "package_name": "com.ensias.mineisyours"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "616472109439-gcf9jjsi6mdj1ltelh4ont1i9jdua0hj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCn1LY04HFpPsFkBW6L2hazE36PJGm3qd8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "616472109439-gcf9jjsi6mdj1ltelh4ont1i9jdua0hj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:616472109439:android:954f64ebfd45abec1bfa4a",
+        "android_client_info": {
+          "package_name": "com.ensias.prjappliation"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "616472109439-gcf9jjsi6mdj1ltelh4ont1i9jdua0hj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCn1LY04HFpPsFkBW6L2hazE36PJGm3qd8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "616472109439-gcf9jjsi6mdj1ltelh4ont1i9jdua0hj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
