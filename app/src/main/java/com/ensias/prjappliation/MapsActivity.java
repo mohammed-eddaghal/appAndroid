@@ -2,13 +2,7 @@ package com.ensias.prjappliation;
 
 import androidx.fragment.app.FragmentActivity;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
 import android.widget.SearchView;
 import android.widget.Toast;
 
@@ -16,23 +10,32 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.mancj.materialsearchbar.MaterialSearchBar;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, SearchView.OnQueryTextListener {
 
-    private static final String[] tolsName={"tornouvise","tomobile","cup","coutant"};
+    static final String[] tolsName={"Bolt","Nail","Screwdriver","Bradawl","Handsaw","Nut","Screw","Wrench","Hammer","Hacksaw"};
 
+    List<Item> itemList;
+    List<Item> listItemMap = new ArrayList<>();
+    //List<Tool> tools;
 
+    Marker marker;
 
     private GoogleMap mMap;
     String userPath="users";
+
+    double lang,lat;
+
+    String searchQuery;
 
 
 
@@ -49,42 +52,43 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     SearchView editsearch;
 
+    String key;
+    private MarkerOptions mapMarker;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
+        //setItemsList();
+
         editsearch = (SearchView) findViewById(R.id.search);
         editsearch.setOnQueryTextListener(this);
+
+        lang = getIntent().getDoubleExtra("langitud",1);
+        lat = getIntent().getDoubleExtra("latitude",1);
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+
         // below line is used to get the
         // instance of our FIrebase database.
         firebaseDatabase = FirebaseDatabase.getInstance();
         // below line is used to get reference for our database.
         databaseReference = firebaseDatabase.getReference(userPath);
-
+        key = databaseReference.push().getKey();
 
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        Double lang = getIntent().getDoubleExtra("langitud",1);
-        Double lat = getIntent().getDoubleExtra("latitude",1);
+        lang = getIntent().getDoubleExtra("langitud",1);
+        lat = getIntent().getDoubleExtra("latitude",1);
         Log.d("testLocation",lang+" / "+lat);
 /*
         for(DataSnapshot dataSnapshot:snapshot.getChildren()){
@@ -94,6 +98,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 return;
             }
         }*/
+        /*for(Item item:itemList){
+            //Log.d("tst",query.toLowerCase()+"|"+item.getTool().getToolName().toLowerCase());
+                drawMarker(new LatLng(item.getUser().getLat(),item.getUser().getLang()),
+                        BitmapDescriptorFactory.HUE_GREEN);
+
+                /*mMap.addMarker(new MarkerOptions()
+                        .position(new LatLng(item.getUser().getLat(),item.getUser().getLang())));
+                //.title(item.getUser().getName()+"|"+item.getTool().getToolName()));
+            }*/
+
+
+
+
         // Add a marker in Sydney and move the camera
         LatLng mark = new LatLng(lat, lang);
 
@@ -101,11 +118,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         mMap.addMarker(new MarkerOptions().position(mark).title("my location"));
 
-        for(int i = 0;i<10;i++){
-            double x = Math.random()/100;
-            double y = Math.random()/100;
-            mMap.addMarker(new MarkerOptions().position(new LatLng(lat+x,lang+y)).title("Marker in Sydney"));
-        }
+
 
         mMap.moveCamera(CameraUpdateFactory.newLatLng(mark));
 
@@ -119,12 +132,90 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public boolean onQueryTextSubmit(String query) {
-        Toast.makeText(MapsActivity.this,query,Toast.LENGTH_LONG).show();
-        return false;
+        searchQuery=query;
+        setItemsList();
+        int x=0;
+        //Toast.makeText(MapsActivity.this,searchQuery,Toast.LENGTH_LONG).show();
+        Toast.makeText(MapsActivity.this,
+                lat+" || "+lang,
+                Toast.LENGTH_LONG).show();
+        for(Item item:itemList){
+
+            if((item.getTool().getToolName().toLowerCase()).compareTo(query.toLowerCase())==0){
+            drawMarker(new LatLng(item.getUser().getLat(),item.getUser().getLang()),
+                    BitmapDescriptorFactory.HUE_BLUE)
+                    .title("|"+item.getTool().getToolName());
+            }
+        }
+
+
+        drawMarker(new LatLng(34.0063, -6.7204),
+                BitmapDescriptorFactory.HUE_GREEN);
+        /*for(Item item:itemList){
+            Log.d("tst",query.toLowerCase()+"|"+item.getTool().getToolName().toLowerCase());
+
+            if((item.getTool().getToolName().toLowerCase()).compareTo(query.toLowerCase())==0){
+                Toast.makeText(MapsActivity.this,
+                        query.toLowerCase()+"|"+item.getTool().getToolName().toLowerCase()+"//"+x++,
+                        Toast.LENGTH_LONG).show();
+                listItemMap.add(item);
+                drawMarker(new LatLng(item.getUser().getLat(),item.getUser().getLang()),
+                        BitmapDescriptorFactory.HUE_GREEN);
+
+                /*mMap.addMarker(new MarkerOptions()
+                        .position(new LatLng(item.getUser().getLat(),item.getUser().getLang())));
+                        //.title(item.getUser().getName()+"|"+item.getTool().getToolName()));
+            }
+        }*/
+        return true;
     }
 
     @Override
     public boolean onQueryTextChange(String newText) {
-        return false;
+
+        return true;
     }
+
+    public void setItemsList(){
+        //setToolsList();
+
+        /*tools = new ArrayList<>();
+        for(String tool:tolsName){
+            Log.v("tool",tool);
+            tools.add(new Tool(tool));
+        }*/
+        int z=0;
+        itemList = new ArrayList<>();
+        for(int i=0;i<50;i++){
+            double x = Math.random()/100;
+            double y = Math.random()/100;
+            User user= new User(key,lang+x,lat+y);
+            itemList.add(new Item(user,new Tool(tolsName[z++])));
+            if(z==10)z=0;
+
+        }
+    }
+
+    private MarkerOptions drawMarker(LatLng point,float id) {
+        // Creating an instance of MarkerOptions
+        MarkerOptions markerOptions = new MarkerOptions();
+
+        // Setting latitude and longitude for the marker
+        markerOptions.position(point);
+        markerOptions.icon(BitmapDescriptorFactory
+                .defaultMarker(id));
+
+        // Adding marker on the Google Map
+        marker = mMap.addMarker(markerOptions);
+
+        mapMarker=markerOptions;
+        return markerOptions;
+    }
+
+    /*public void setToolsList(){
+        tools = new ArrayList<>();
+        for(String tool:tolsName){
+            tools.add(new Tool(tool));
+        }
+    }*/
 }
