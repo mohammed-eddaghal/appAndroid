@@ -2,6 +2,7 @@ package com.ensias.prjappliation;
 
 
 public class User {
+    static int cont=0;
     String id;
     double lang,lat;
     String name;
@@ -18,6 +19,13 @@ public class User {
         this.lang = lang;
         this.lat = lat;
         this.name = name;
+    }
+
+    public User(String id, double lang, double lat) {
+        this.id = id;
+        this.lang = lang;
+        this.lat = lat;
+        this.name = "med"+(++cont);
     }
 
     public String getId() {
