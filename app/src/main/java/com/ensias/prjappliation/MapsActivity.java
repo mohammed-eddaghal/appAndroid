@@ -1,6 +1,9 @@
 package com.ensias.prjappliation;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentActivity;
+
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.SearchView;
@@ -14,24 +17,35 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, SearchView.OnQueryTextListener {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, SearchView.OnQueryTextListener, GoogleMap.OnMarkerClickListener, ValueEventListener {
 
     static final String[] tolsName={"Bolt","Nail","Screwdriver","Bradawl","Handsaw","Nut","Screw","Wrench","Hammer","Hacksaw"};
 
+    SupportMapFragment mapFragment;
     List<Item> itemList;
     List<Item> listItemMap = new ArrayList<>();
-    //List<Tool> tools;
+    List<Tool> tools=new ArrayList<>();
+
+    List<Marker> markers = new ArrayList<>();
 
     Marker marker;
 
     private GoogleMap mMap;
-    String userPath="users";
+    String userPath="users", toolPath="types";
+    final static String keyUser = "-M_gOmulg-2mzNWN2d554";
 
     double lang,lat;
 
@@ -57,66 +71,58 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+        user = new User();
 
-        //setItemsList();
 
-        editsearch = (SearchView) findViewById(R.id.search);
+        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+        //FireBaseTraitement.getListOfTools();
+
+        editsearch = findViewById(R.id.search);
         editsearch.setOnQueryTextListener(this);
+
+
 
         lang = getIntent().getDoubleExtra("langitud",1);
         lat = getIntent().getDoubleExtra("latitude",1);
 
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        new LoadData().execute();
 
 
-        // below line is used to get the
-        // instance of our FIrebase database.
-        firebaseDatabase = FirebaseDatabase.getInstance();
-        // below line is used to get reference for our database.
-        databaseReference = firebaseDatabase.getReference(userPath);
-        key = databaseReference.push().getKey();
 
     }
+
 
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        lang = getIntent().getDoubleExtra("langitud",1);
-        lat = getIntent().getDoubleExtra("latitude",1);
-        Log.d("testLocation",lang+" / "+lat);
-/*
-        for(DataSnapshot dataSnapshot:snapshot.getChildren()){
-            User user1=dataSnapshot.getValue(User.class);
-            if(user1.getName().equals("med")){
-                Toast.makeText(MainActivity.this, "user already exist", Toast.LENGTH_SHORT).show();
-                return;
-            }
-        }*/
-        /*for(Item item:itemList){
-            //Log.d("tst",query.toLowerCase()+"|"+item.getTool().getToolName().toLowerCase());
-                drawMarker(new LatLng(item.getUser().getLat(),item.getUser().getLang()),
-                        BitmapDescriptorFactory.HUE_GREEN);
 
-                /*mMap.addMarker(new MarkerOptions()
-                        .position(new LatLng(item.getUser().getLat(),item.getUser().getLang())));
-                //.title(item.getUser().getName()+"|"+item.getTool().getToolName()));
-            }*/
+    }
 
-
-
+    public void mapContent(){
+        if(user.getName()!=null){
+            Log.d("tagTestxx","xxx ||| "+user.getName()+"/ "+user.getLat()+"/ "+user.getLang());
+            lang = user.getLang();
+            lat = user.getLat();
+        }else{
+            Log.d("tagTestxx","xxx |||");
+            lang = getIntent().getDoubleExtra("langitud",1);
+            lat = getIntent().getDoubleExtra("latitude",1);
+        }
 
         // Add a marker in Sydney and move the camera
+
         LatLng mark = new LatLng(lat, lang);
 
 
+        mMap.addMarker(new MarkerOptions().position(mark).title(user.getName()));
 
-        mMap.addMarker(new MarkerOptions().position(mark).title("my location"));
 
 
 
@@ -127,13 +133,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         mMap.getUiSettings().setCompassEnabled(true);
         mMap.getUiSettings().setZoomControlsEnabled(true);
-
     }
 
     @Override
     public boolean onQueryTextSubmit(String query) {
         searchQuery=query;
         setItemsList();
+        for (Marker marker:markers){
+            marker.remove();
+        }
+        markers.clear();
+
         int x=0;
         //Toast.makeText(MapsActivity.this,searchQuery,Toast.LENGTH_LONG).show();
         Toast.makeText(MapsActivity.this,
@@ -142,31 +152,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         for(Item item:itemList){
 
             if((item.getTool().getToolName().toLowerCase()).compareTo(query.toLowerCase())==0){
-            drawMarker(new LatLng(item.getUser().getLat(),item.getUser().getLang()),
-                    BitmapDescriptorFactory.HUE_BLUE)
-                    .title("|"+item.getTool().getToolName());
+                drawMarker(new LatLng(item.getUser().getLat(),item.getUser().getLang()),
+                        BitmapDescriptorFactory.HUE_BLUE, item);
             }
         }
 
+        if(tools.size()==0)Log.d("testOne","tools list is umpty");
+        for(Tool tool:tools){
+            Log.d("testZero",tool.getToolName());
+        }
 
-        drawMarker(new LatLng(34.0063, -6.7204),
-                BitmapDescriptorFactory.HUE_GREEN);
-        /*for(Item item:itemList){
-            Log.d("tst",query.toLowerCase()+"|"+item.getTool().getToolName().toLowerCase());
-
-            if((item.getTool().getToolName().toLowerCase()).compareTo(query.toLowerCase())==0){
-                Toast.makeText(MapsActivity.this,
-                        query.toLowerCase()+"|"+item.getTool().getToolName().toLowerCase()+"//"+x++,
-                        Toast.LENGTH_LONG).show();
-                listItemMap.add(item);
-                drawMarker(new LatLng(item.getUser().getLat(),item.getUser().getLang()),
-                        BitmapDescriptorFactory.HUE_GREEN);
-
-                /*mMap.addMarker(new MarkerOptions()
-                        .position(new LatLng(item.getUser().getLat(),item.getUser().getLang())));
-                        //.title(item.getUser().getName()+"|"+item.getTool().getToolName()));
-            }
-        }*/
         return true;
     }
 
@@ -177,13 +172,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void setItemsList(){
-        //setToolsList();
 
-        /*tools = new ArrayList<>();
-        for(String tool:tolsName){
-            Log.v("tool",tool);
-            tools.add(new Tool(tool));
-        }*/
         int z=0;
         itemList = new ArrayList<>();
         for(int i=0;i<50;i++){
@@ -196,7 +185,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    private MarkerOptions drawMarker(LatLng point,float id) {
+    private MarkerOptions drawMarker(LatLng point,float id,Item item) {
         // Creating an instance of MarkerOptions
         MarkerOptions markerOptions = new MarkerOptions();
 
@@ -206,16 +195,113 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .defaultMarker(id));
 
         // Adding marker on the Google Map
-        marker = mMap.addMarker(markerOptions);
+        marker = mMap.addMarker(markerOptions.title(item.getUser().getName()+"--"+item.getTool().getToolName()));
+        markers.add(marker);
+
+        mMap.setOnMarkerClickListener(this);
 
         mapMarker=markerOptions;
         return markerOptions;
     }
 
-    /*public void setToolsList(){
-        tools = new ArrayList<>();
-        for(String tool:tolsName){
-            tools.add(new Tool(tool));
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        if(marker.getPosition().longitude!=lang&&marker.getPosition().latitude!=lat){
+            Toast.makeText(MapsActivity.this,"latitude"+marker.getPosition().latitude+" | longitude"
+                    +marker.getPosition().longitude,Toast.LENGTH_LONG).show();
         }
+        return false;
+    }
+
+    @Override
+    public void onDataChange(@NonNull DataSnapshot snapshot) {
+        getUser(snapshot);
+    }
+
+    public void getUser(@NonNull DataSnapshot snapshot){
+        User userx = FireBaseTraitement.findUserByID(keyUser,snapshot,MapsActivity.this);
+
+        Log.d("tagTest","firebase traitment"+userx.getName()+"/ "+userx.getLat()+"/ "+userx.getLang());
+
+        user.setId(userx.getId());
+        user.setName(userx.getName());
+        user.setLang(userx.getLang());
+        user.setLat(userx.getLat());
+        Log.d("tagTestDDD","firebase traitment"+user.getName()+"/ "+user.getLat()+"/ "+user.getLang());
+
+        mapContent();
+    }
+
+    @Override
+    public void onCancelled(@NonNull DatabaseError error) {
+
+    }
+
+    public class LoadData extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            firebaseDatabase = FirebaseDatabase.getInstance();
+            // below line is used to get reference for our database.
+            databaseReference = firebaseDatabase.getReference(userPath);
+            Log.d("test","log test 0");
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            // below line is used to get the
+            // instance of our FIrebase database.
+
+            databaseReference.addValueEventListener(MapsActivity.this);
+
+            Log.d("test","log test 1");
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void unused) {
+            //key = databaseReference.push().getKey();
+            FireBaseTraitement.getX(keyUser,databaseReference);
+            //mapContent();
+        }
+    }
+    /*public void x(){
+        final User user3=new User();
+        databaseReference.child(keyUser).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DataSnapshot> task) {
+
+                if (!task.isSuccessful()) {
+                    Log.e("firebase", "Error getting data", task.getException());
+                }
+                else {
+                    // user3.setId(((User)((HashMap)task.getResult().getValue()).entrySet().iterator().next()).getId());
+
+
+                    Log.d("firebase", task.getResult().getValue(User.class).toString());
+
+                }
+            }
+        });
+    }*/
+    /*public void setToolsList(){
+        databaseReference = firebaseDatabase.getReference(toolPath);
+        databaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+
+                for(DataSnapshot dataSnapshot:snapshot.getChildren()){
+                    //toolList.add(dataSnapshot.getValue(Tool.class));
+                    tools.add(dataSnapshot.getValue(Tool.class));
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
     }*/
 }

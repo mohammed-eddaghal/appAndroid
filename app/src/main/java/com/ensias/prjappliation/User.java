@@ -3,11 +3,13 @@ package com.ensias.prjappliation;
 
 public class User {
     static int cont=0;
-    String id;
-    double lang,lat;
-    String name;
+    private String id;
+    private double lang,lat;
+    private String name;
+
     public User(){
     }
+
     public User(double lang, double lat, String name) {
         this.lang = lang;
         this.lat = lat;
@@ -26,6 +28,23 @@ public class User {
         this.lang = lang;
         this.lat = lat;
         this.name = "med"+(++cont);
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id='" + id + '\'' +
+                ", lang=" + lang +
+                ", lat=" + lat +
+                ", name='" + name + '\'' +
+                '}';
+    }
+
+    public User(User user){
+        id=user.id;
+        name=user.name;
+        lang=user.lang;
+        lat=user.lat;
     }
 
     public String getId() {

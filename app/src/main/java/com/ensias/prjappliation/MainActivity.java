@@ -72,8 +72,8 @@ public class MainActivity extends AppCompatActivity {
 
         //check permission
         if(ActivityCompat.checkSelfPermission(MainActivity.this
-        , Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        && ActivityCompat.checkSelfPermission(MainActivity.this
+                , Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(MainActivity.this
                 , Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED ){
             // if both permissions garanted => call methode
             getCurrentLocation();
@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         //check condition
         if(requestCode == 100 && grantResults.length > 0 && (grantResults[0]+ grantResults[1]
-        == PackageManager.PERMISSION_GRANTED)){
+                == PackageManager.PERMISSION_GRANTED)){
             getCurrentLocation();
         }else{
             Toast.makeText(getApplicationContext(), "Permission Denied", Toast.LENGTH_LONG).show();
@@ -115,18 +115,7 @@ public class MainActivity extends AppCompatActivity {
                 // inside the method of on Data change we are setting
                 // our object class to our database reference.
                 // data base reference will sends data to firebase.
-                //boolean bol = false;
-                for(DataSnapshot dataSnapshot:snapshot.getChildren()){
-                    User user1=dataSnapshot.getValue(User.class);
-                    if(user1.getName().equals("med")){
-                        Toast.makeText(MainActivity.this, "user already exist", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                }
-                databaseReference.child(key).setValue(user).addOnCompleteListener((task)->{
-                    // after adding this data we are showing toast message.
-                    Toast.makeText(MainActivity.this, "data added", Toast.LENGTH_SHORT).show();
-                });
+                FireBaseTraitement.addUser("med",snapshot, MainActivity.this,databaseReference,key,user);
             }
 
             @Override
@@ -145,13 +134,13 @@ public class MainActivity extends AppCompatActivity {
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         //check condition
         if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)||
-        locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)){
+                locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)){
             //when location service is enabled
             //get Location
             fusedLocationProviderClient.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
                 @Override
                 public void onComplete(@NonNull Task<Location> task) {
-                        //initialize Location
+                    //initialize Location
                     Location location = task.getResult();
                     //check condition
                     if (location != null){
@@ -164,6 +153,7 @@ public class MainActivity extends AppCompatActivity {
                         Intent intent= new Intent(MainActivity.this, MapsActivity.class);
                         intent.putExtra("langitud", location.getLongitude());
                         intent.putExtra("latitude", location.getLatitude());
+                        intent.putExtra("userID", key);
                         startActivity(intent);
 
                         addUserDataToFireBase("med",location.getLongitude(),location.getLatitude());
