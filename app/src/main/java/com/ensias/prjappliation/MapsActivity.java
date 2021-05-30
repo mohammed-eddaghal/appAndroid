@@ -17,8 +17,6 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -27,10 +25,9 @@ import com.google.firebase.database.ValueEventListener;
 
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, SearchView.OnQueryTextListener, GoogleMap.OnMarkerClickListener, ValueEventListener {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, SearchView.OnQueryTextListener, GoogleMap.OnMarkerClickListener {
 
     static final String[] tolsName={"Bolt","Nail","Screwdriver","Bradawl","Handsaw","Nut","Screw","Wrench","Hammer","Hacksaw"};
 
@@ -213,14 +210,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return false;
     }
 
-    @Override
-    public void onDataChange(@NonNull DataSnapshot snapshot) {
-        getUser(snapshot);
-    }
 
-    public void getUser(@NonNull DataSnapshot snapshot){
-        User userx = FireBaseTraitement.findUserByID(keyUser,snapshot,MapsActivity.this);
 
+    public void getUser(@NonNull DataSnapshot snapshot) throws InterruptedException {
+        //User userx = FireBaseTraitement.findUserByID(keyUser,snapshot,MapsActivity.this);
+
+        User userx= FireBaseTraitement.getUserByID(keyUser,databaseReference);
         Log.d("tagTest","firebase traitment"+userx.getName()+"/ "+userx.getLat()+"/ "+userx.getLang());
 
         user.setId(userx.getId());
@@ -230,11 +225,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Log.d("tagTestDDD","firebase traitment"+user.getName()+"/ "+user.getLat()+"/ "+user.getLang());
 
         mapContent();
-    }
-
-    @Override
-    public void onCancelled(@NonNull DatabaseError error) {
-
     }
 
     public class LoadData extends AsyncTask<Void, Void, Void> {
@@ -252,9 +242,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             // below line is used to get the
             // instance of our FIrebase database.
 
-            databaseReference.addValueEventListener(MapsActivity.this);
+            try {
+                user.cloneUser(FireBaseTraitement.getUserByID(keyUser,databaseReference));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
-            Log.d("test","log test 1");
+            //databaseReference.addValueEventListener(MapsActivity.this);
+
+            Log.d("test","log test 1"+user.toString());
 
             return null;
         }
@@ -262,7 +258,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         @Override
         protected void onPostExecute(Void unused) {
             //key = databaseReference.push().getKey();
-            FireBaseTraitement.getX(keyUser,databaseReference);
+            //FireBaseTraitement.getUserByID(keyUser,databaseReference);
+            mapContent();
+            Log.d("test","log test 2"+user.toString());
             //mapContent();
         }
     }

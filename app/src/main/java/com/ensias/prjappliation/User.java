@@ -32,7 +32,8 @@ public class User {
 
     @Override
     public String toString() {
-        return "User{" +
+        return super.toString()+"/|\'"+
+                "User{" +
                 "id='" + id + '\'' +
                 ", lang=" + lang +
                 ", lat=" + lat +
@@ -77,5 +78,12 @@ public class User {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public void cloneUser(User user){
+        setId(user.getId());
+        setLat(user.getLat());
+        setLang(user.getLang());
+        setName(user.getName());
     }
 }
